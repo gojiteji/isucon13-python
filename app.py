@@ -28,6 +28,8 @@ from flask import Flask, Response, request, send_file, session
 from mysql.connector.errors import DatabaseError
 from sqlalchemy import create_engine
 
+import newrelic.agent
+newrelic.agent.initialize('/home/isucon/webapp/python/newrelic.ini')
 
 class Settings(object):
     LISTEN_PORT = 8080
@@ -1285,7 +1287,15 @@ def get_icon_handler(username: str) -> Response:
         row = c.fetchone()
         if row is None:
             raise HttpException("user not found", INTERNAL_SERVER_ERROR)
-        user = models.UserModel(**row)
+        user_model = models.UserModel(**row)
+        
+        # icon_hashを生成
+        user = fill_user_response(c, user_model)
+        # ヘッダーからicon_hashを取得
+        icon_hash = request.headers.get("If-None-Match", None)
+        # icon_hashが同じなら即return
+        if user.icon_hash == icon_hash:
+            return [], 304
 
         sql = "SELECT image FROM icons WHERE user_id = %s"
         c.execute(sql, [user.id])
