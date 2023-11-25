@@ -28,8 +28,6 @@ from flask import Flask, Response, request, send_file, session
 from mysql.connector.errors import DatabaseError
 from sqlalchemy import create_engine
 
-import newrelic.agent
-newrelic.agent.initialize('/home/isucon/webapp/python/newrelic.ini')
 
 class Settings(object):
     LISTEN_PORT = 8080
