@@ -227,9 +227,9 @@ def reserve_livestream_handler() -> tuple[dict[str, Any], int]:
 
         # タグ追加
         if "tags" in req and req["tags"]:
-            for tag_id in req["tags"]:
-                sql = "INSERT INTO livestream_tags (livestream_id, tag_id) VALUES (%s, %s)"
-                c.execute(sql, [livestream_model.id, tag_id])
+            values = [(livestream_model.id, tag_id) for tag_id in req["tags"]]
+            sql = "INSERT INTO livestream_tags (livestream_id, tag_id) VALUES (%s, %s)"
+            c.executemany(sql, values)
 
         livestream = fill_livestream_response(c, livestream_model)
         if not livestream:
@@ -1324,6 +1324,9 @@ def post_icon_handler() -> tuple[dict[str, Any], int]:
             "failed to decode the request body as json",
             BAD_REQUEST,
         )
+    
+    sql = ""
+    
     new_icon = b64decode(req["image"])
 
     conn = engine.raw_connection()
